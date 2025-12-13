@@ -1,19 +1,21 @@
-import express from 'express';
-import { createServer } from 'http';
-import { Server } from 'socket.io';
-import cors from 'cors';
+import express from "express";
+import { createServer } from "http";
+import { Server } from "socket.io";
+import cors from "cors";
 
 const app = express();
 
 // Configure CORS for Express
 const allowedOrigins = process.env.CLIENT_URL
-  ? process.env.CLIENT_URL.split(',')
-  : ['http://localhost:3000'];
+  ? process.env.CLIENT_URL.split(",")
+  : ["http://localhost:3000"];
 
-app.use(cors({
-  origin: allowedOrigins,
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+  })
+);
 
 const httpServer = createServer(app);
 
@@ -21,7 +23,7 @@ const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
     origin: allowedOrigins,
-    methods: ['GET', 'POST'],
+    methods: ["GET", "POST"],
     credentials: true,
   },
 });
@@ -33,10 +35,10 @@ interface Room {
 
 const rooms = new Map<string, Room>();
 
-io.on('connection', (socket) => {
-  console.log('User connected:', socket.id);
+io.on("connection", (socket) => {
+  console.log("User connected:", socket.id);
 
-  socket.on('create-room', ({ roomId }: { roomId: string }) => {
+  socket.on("create-room", ({ roomId }: { roomId: string }) => {
     console.log(`Creating room: ${roomId}`);
 
     if (!rooms.has(roomId)) {
@@ -45,56 +47,107 @@ io.on('connection', (socket) => {
         participants: new Set([socket.id]),
       });
       socket.join(roomId);
-      socket.emit('room-created', { roomId });
+      socket.emit("room-created", { roomId });
       console.log(`Room ${roomId} created by ${socket.id}`);
     } else {
-      socket.emit('error', { message: 'Room already exists' });
+      socket.emit("error", { message: "Room already exists" });
     }
   });
 
-  socket.on('join-room', ({ roomId }: { roomId: string }) => {
+  socket.on("join-room", ({ roomId }: { roomId: string }) => {
     console.log(`User ${socket.id} trying to join room: ${roomId}`);
 
     const room = rooms.get(roomId);
 
     if (!room) {
-      socket.emit('error', { message: 'Room does not exist' });
+      socket.emit("error", { message: "Room does not exist" });
       return;
     }
 
-    if (room.participants.size >= 2) {
-      socket.emit('room-full', { message: 'Room is full' });
-      return;
-    }
+    // Get existing participants before adding new user
+    const existingParticipants = Array.from(room.participants);
 
+    // Add new user to room
     room.participants.add(socket.id);
     socket.join(roomId);
 
-    socket.to(roomId).emit('user-joined', { userId: socket.id });
-    console.log(`User ${socket.id} joined room ${roomId}`);
+    // Send existing participants list to the new user
+    socket.emit("room-joined", { roomId, participants: existingParticipants });
+
+    // Notify existing participants about the new user
+    socket.to(roomId).emit("user-joined", { userId: socket.id });
+
+    console.log(
+      `User ${socket.id} joined room ${roomId}. Total participants: ${room.participants.size}`
+    );
   });
 
-  socket.on('offer', ({ roomId, offer }: { roomId: string; offer: RTCSessionDescriptionInit }) => {
-    console.log(`Offer from ${socket.id} in room ${roomId}`);
-    socket.to(roomId).emit('offer', { offer, userId: socket.id });
-  });
+  socket.on(
+    "offer",
+    ({
+      roomId,
+      targetUserId,
+      offer,
+    }: {
+      roomId: string;
+      targetUserId: string;
+      offer: RTCSessionDescriptionInit;
+    }) => {
+      console.log(
+        `Offer from ${socket.id} to ${targetUserId} in room ${roomId}`
+      );
+      // Send offer to specific target user
+      io.to(targetUserId).emit("offer", { offer, userId: socket.id });
+    }
+  );
 
-  socket.on('answer', ({ roomId, answer }: { roomId: string; answer: RTCSessionDescriptionInit }) => {
-    console.log(`Answer from ${socket.id} in room ${roomId}`);
-    socket.to(roomId).emit('answer', { answer, userId: socket.id });
-  });
+  socket.on(
+    "answer",
+    ({
+      roomId,
+      targetUserId,
+      answer,
+    }: {
+      roomId: string;
+      targetUserId: string;
+      answer: RTCSessionDescriptionInit;
+    }) => {
+      console.log(
+        `Answer from ${socket.id} to ${targetUserId} in room ${roomId}`
+      );
+      // Send answer to specific target user
+      io.to(targetUserId).emit("answer", { answer, userId: socket.id });
+    }
+  );
 
-  socket.on('ice-candidate', ({ roomId, candidate }: { roomId: string; candidate: RTCIceCandidateInit }) => {
-    console.log(`ICE candidate from ${socket.id} in room ${roomId}`);
-    socket.to(roomId).emit('ice-candidate', { candidate, userId: socket.id });
-  });
+  socket.on(
+    "ice-candidate",
+    ({
+      roomId,
+      targetUserId,
+      candidate,
+    }: {
+      roomId: string;
+      targetUserId: string;
+      candidate: RTCIceCandidateInit;
+    }) => {
+      console.log(
+        `ICE candidate from ${socket.id} to ${targetUserId} in room ${roomId}`
+      );
+      // Send ICE candidate to specific target user
+      io.to(targetUserId).emit("ice-candidate", {
+        candidate,
+        userId: socket.id,
+      });
+    }
+  );
 
-  socket.on('leave-room', ({ roomId }: { roomId: string }) => {
+  socket.on("leave-room", ({ roomId }: { roomId: string }) => {
     handleUserLeaving(socket.id, roomId);
   });
 
-  socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id);
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", socket.id);
 
     rooms.forEach((room, roomId) => {
       if (room.participants.has(socket.id)) {
@@ -108,7 +161,7 @@ io.on('connection', (socket) => {
 
     if (room) {
       room.participants.delete(socketId);
-      socket.to(roomId).emit('user-left', { userId: socketId });
+      socket.to(roomId).emit("user-left", { userId: socketId });
       socket.leave(roomId);
 
       console.log(`User ${socketId} left room ${roomId}`);
@@ -121,9 +174,9 @@ io.on('connection', (socket) => {
   }
 });
 
-app.get('/health', (_req, res) => {
+app.get("/health", (_req, res) => {
   res.json({
-    status: 'ok',
+    status: "ok",
     rooms: rooms.size,
     timestamp: new Date().toISOString(),
   });
