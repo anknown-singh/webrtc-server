@@ -61,14 +61,15 @@ if [ "$choice" = "1" ]; then
     echo ""
 
     echo "🔧 Setting environment variables..."
-    railway variables set PORT=3001
+    # Note: Railway automatically provides PORT environment variable
+    # No need to set it manually
 
     # Ask for CLIENT_URL
     read -p "Enter your frontend URL (or press Enter to set later): " client_url
     if [ ! -z "$client_url" ]; then
-        railway variables set CLIENT_URL="$client_url"
+        railway variables --set CLIENT_URL="$client_url"
     else
-        railway variables set CLIENT_URL="http://localhost:3000"
+        railway variables --set CLIENT_URL="http://localhost:3000"
         echo "⚠️  Using localhost:3000 as default. Update this after deploying frontend!"
     fi
     echo ""
