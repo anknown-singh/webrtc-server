@@ -1,0 +1,36 @@
+{
+  "name": "webrtc-signaling-server",
+  "version": "1.0.0",
+  "description": "WebRTC signaling server using Socket.io for WebRTC video calling",
+  "main": "index.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch index.ts",
+    "start": "tsx index.ts",
+    "build": "echo 'No build step needed for tsx'"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.2.1",
+    "socket.io": "^4.8.1",
+    "tsx": "^4.21.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^20.17.10"
+  },
+  "engines": {
+    "node": ">=18.x",
+    "npm": ">=9.x"
+  },
+  "keywords": [
+    "webrtc",
+    "signaling",
+    "socket.io",
+    "video-call",
+    "peer-to-peer"
+  ],
+  "author": "",
+  "license": "MIT"
+}
