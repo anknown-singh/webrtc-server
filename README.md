@@ -17,19 +17,16 @@ A standalone WebSocket signaling server for WebRTC peer-to-peer connections usin
 ### Method 1: Using Railway CLI (Recommended - 5 minutes)
 
 1. **Install Railway CLI**
-
    ```bash
    npm install -g @railway/cli
    ```
 
 2. **Login to Railway**
-
    ```bash
    railway login
    ```
 
 3. **Initialize and Deploy**
-
    ```bash
    # Make sure you're in the server directory
    cd server
@@ -42,7 +39,6 @@ A standalone WebSocket signaling server for WebRTC peer-to-peer connections usin
    ```
 
 4. **Set Environment Variables**
-
    ```bash
    # Note: Railway automatically provides PORT environment variable
    # No need to set it manually
@@ -52,7 +48,6 @@ A standalone WebSocket signaling server for WebRTC peer-to-peer connections usin
    ```
 
 5. **Get Your Server URL**
-
    ```bash
    railway domain
    ```
@@ -64,7 +59,6 @@ A standalone WebSocket signaling server for WebRTC peer-to-peer connections usin
    Visit: `https://your-railway-url.railway.app/health`
 
    You should see:
-
    ```json
    {
      "status": "ok",
@@ -76,7 +70,7 @@ A standalone WebSocket signaling server for WebRTC peer-to-peer connections usin
 ### Method 2: Using Railway Dashboard (Web Interface)
 
 1. **Create Railway Account**
-   - Go to <https://railway.app>
+   - Go to https://railway.app
    - Sign up with GitHub
 
 2. **Create New Project**
@@ -103,7 +97,7 @@ A standalone WebSocket signaling server for WebRTC peer-to-peer connections usin
 ## Alternative: Deploy to Render
 
 1. **Create Render Account**
-   - Go to <https://render.com>
+   - Go to https://render.com
    - Sign up with GitHub
 
 2. **Create New Web Service**
@@ -125,32 +119,27 @@ A standalone WebSocket signaling server for WebRTC peer-to-peer connections usin
 ## Local Development
 
 1. **Install Dependencies**
-
    ```bash
    npm install
    ```
 
 2. **Create Environment File**
-
    ```bash
    cp .env.example .env
    ```
 
 3. **Edit .env**
-
    ```env
    PORT=3001
    CLIENT_URL=http://localhost:3000
    ```
 
 4. **Run Development Server**
-
    ```bash
    npm run dev
    ```
 
 5. **Test Health Endpoint**
-
    ```bash
    curl http://localhost:3001/health
    ```
@@ -163,7 +152,6 @@ A standalone WebSocket signaling server for WebRTC peer-to-peer connections usin
 | `CLIENT_URL` | Frontend URL(s) for CORS | `https://app.vercel.app` | Yes |
 
 **Multiple URLs:** Separate with commas
-
 ```bash
 CLIENT_URL=https://app.vercel.app,https://staging.vercel.app,http://localhost:3000
 ```
@@ -171,22 +159,18 @@ CLIENT_URL=https://app.vercel.app,https://staging.vercel.app,http://localhost:30
 ## Architecture
 
 ### Mesh Topology
-
 The server uses a **full mesh topology** where:
-
 - Each participant connects directly to every other participant
 - Server acts as signaling intermediary only (no media routing)
 - N participants = N×(N-1)/2 total peer connections
 
 **Example:** With 4 participants, there are 6 peer connections total:
-
 - Participant A connects to B, C, D (3 connections)
 - Participant B connects to C, D (2 connections)
 - Participant C connects to D (1 connection)
 - Total: 6 connections
 
 ### Signaling Flow
-
 1. **User A creates room**
    - Server creates room with User A as first participant
    - User A receives `room-created` event
@@ -208,9 +192,7 @@ The server uses a **full mesh topology** where:
    - User C now has 2 peer connections
 
 ### Peer-Specific Routing
-
 All signaling messages include `targetUserId` for direct peer-to-peer delivery:
-
 - **Offers** are sent to specific peers using `io.to(targetUserId).emit()`
 - **Answers** are returned to specific peers
 - **ICE candidates** are routed to specific peers
@@ -218,9 +200,7 @@ All signaling messages include `targetUserId` for direct peer-to-peer delivery:
 This enables multiple simultaneous peer connections per room, allowing unlimited participants.
 
 ### Bandwidth Considerations
-
 Mesh topology bandwidth requirements grow quadratically:
-
 - 2 users: 2 streams (1 up, 1 down per user)
 - 4 users: 12 streams (3 up, 3 down per user)
 - 6 users: 30 streams (5 up, 5 down per user)
@@ -233,11 +213,9 @@ For rooms with 6+ participants, consider implementing an SFU (Selective Forwardi
 ### HTTP Endpoints
 
 #### `GET /health`
-
 Health check endpoint
 
 **Response:**
-
 ```json
 {
   "status": "ok",
@@ -287,19 +265,16 @@ Health check endpoint
 ### Railway
 
 **View Logs:**
-
 ```bash
 railway logs
 ```
 
 **Follow Logs:**
-
 ```bash
 railway logs --follow
 ```
 
 **Check Service Status:**
-
 ```bash
 railway status
 ```
@@ -314,7 +289,6 @@ railway status
 ### Issue: CORS errors in browser
 
 **Solution:**
-
 ```bash
 # Make sure CLIENT_URL is set correctly
 railway variables set CLIENT_URL=https://your-actual-vercel-url.vercel.app
@@ -323,7 +297,6 @@ railway variables set CLIENT_URL=https://your-actual-vercel-url.vercel.app
 ### Issue: WebSocket connection fails
 
 **Check:**
-
 1. Server is running: `curl https://your-server.railway.app/health`
 2. Client URL is correct in frontend environment variables
 3. Railway/Render logs for errors: `railway logs`
@@ -331,7 +304,6 @@ railway variables set CLIENT_URL=https://your-actual-vercel-url.vercel.app
 ### Issue: Port already in use locally
 
 **Solution:**
-
 ```bash
 # Change port in .env
 PORT=3002
@@ -340,13 +312,11 @@ PORT=3002
 ### Issue: Server crashes on startup
 
 **Check Railway logs:**
-
 ```bash
 railway logs
 ```
 
 **Common causes:**
-
 - Missing dependencies: Run `railway up` again
 - Invalid environment variables
 - Port configuration issue
@@ -354,14 +324,12 @@ railway logs
 ## Updating the Server
 
 ### Update via Railway CLI
-
 ```bash
 cd server
 railway up
 ```
 
 ### Update via Git (if connected to Railway)
-
 ```bash
 git add .
 git commit -m "Update server"
@@ -372,13 +340,11 @@ git push origin main
 ## Costs
 
 ### Railway
-
 - **Free Tier**: $5 in free credits per month
 - **After Free Tier**: ~$5-10/month for a small signaling server
 - **Pricing**: Pay for what you use (CPU, RAM, bandwidth)
 
 ### Render
-
 - **Free Tier**: 750 hours/month, spins down after 15 min inactivity
 - **Paid Tier**: Starts at $7/month for always-on service
 
@@ -393,13 +359,11 @@ git push origin main
 ## Production Recommendations
 
 1. **Add Rate Limiting**
-
    ```bash
    npm install socket.io-rate-limit
    ```
 
 2. **Add Logging**
-
    ```bash
    npm install winston
    ```
@@ -414,9 +378,9 @@ git push origin main
 
 ## Support
 
-- Railway Docs: <https://docs.railway.app>
-- Render Docs: <https://render.com/docs>
-- Socket.io Docs: <https://socket.io/docs>
+- Railway Docs: https://docs.railway.app
+- Render Docs: https://render.com/docs
+- Socket.io Docs: https://socket.io/docs
 
 ## License
 
